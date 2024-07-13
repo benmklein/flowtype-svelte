@@ -1,22 +1,22 @@
 <script lang="ts" type='module'>
 import * as svelte from 'svelte'
 import * as Ace from "ace-builds"
+import {challenges, type ChallengeText} from '../challenges'
 Ace.config.set('basePath', "src-min-noconflict")
 let editor : Ace.Ace.Editor;
 let goaleditor : Ace.Ace.Editor;
 let score = 0;
 let scoreBox : HTMLElement | null;
 
-function onKeyDown(e) {
-  console.log('key down')
-  compareTextLines()
-}
+// function onKeyDown(e) {
+//   console.log('key down')
+//   compareTextLines()
+// }
 function normalizeText(text: string) {
   return text.replace(/\s+/g, ' ').trim();
 }
 
 function compareTextLines() {
-  console.log('compareTextLines ran.')
   let min = Math.min(editor.session.getDocument().getLength(), goaleditor.session.getDocument().getLength())
   let editorLines = editor.session.getDocument().getLines(0, min)
   let goalLines = goaleditor.session.getDocument().getLines(0, min)
@@ -27,7 +27,6 @@ function compareTextLines() {
     }
   }
   console.log("Matching lines:", ...matchingList)
-  console.log(scoreBox)
   matchingList.forEach( (e)=> {
     editor.session.getDocument().removeFullLines(e, e)
     goaleditor.session.getDocument().removeFullLines(e, e)
@@ -40,7 +39,15 @@ function compareTextLines() {
 }
 
 function getLines() {
+  const num = Math.floor( Math.random() * 12 )
 
+    const editUM =  editor.session.getUndoManager() 
+
+    editor.session.getDocument().insertFullLines(editor.session.getLength() + 1, challenges[num].startString)
+    goaleditor.session.getDocument().insertFullLines(goaleditor.session.getLength() + 1, challenges[num].endString)
+
+  //@ts-ignore
+  editUM.$undoStack.pop()
 }
 
 svelte.onMount(async () => {
@@ -59,6 +66,15 @@ svelte.onMount(async () => {
   goaleditor.setOptions({
     fontSize: "14pt"
   })
+  
+  editor.on("change", (_) => {
+  compareTextLines()
+  })
+
+  editor.on("mousewheel", (_) => {
+    console.log('scrolled.')
+    goaleditor.getCursorPosition().row = editor.getCursorPosition().row
+  }) 
 
   scoreBox = document?.getElementById('scorebox')
 
@@ -68,33 +84,7 @@ svelte.onMount(async () => {
 })
 
 
-// document.getElementById('editor')?.addEventListener('keyup', compareTextLines);
-// htmx.on("htmx:afterRequest", function(evt) {
-//   if ((<CustomEvent>evt).detail.elt.id === 'compareButton') {
-//     (<CustomEvent>evt).detail.elt.setAttribute('disabled', true);
-//   }
-// })
-// });
-
-// document.body.addEventListener("getChallenges", function(e){
-//     console.log("getChallenges trigged")
-//     const editUM =  editor.session.getUndoManager() 
-//
-//     editor.session.getDocument().insertFullLines(editor.session.getLength() + 1, (<CustomEvent>e).detail.startString)
-//     goaleditor.session.getDocument().insertFullLines(goaleditor.session.getLength() + 1, (<CustomEvent>e).detail.endString)
-//
-//   //@ts-ignore
-//   editUM.$undoStack.pop()
-// })
-//
-
-//
-// function getLines() {
-//     htmx.ajax("GET", "/get-lines", {
-//       swap: "none"
-//     })
-// }
-// </script>
+ </script>
 <body class ="bg-black dark:bg-gray-900 h-screen">
 
   <title>typeFlow</title>
@@ -140,4 +130,4 @@ svelte.onMount(async () => {
 }
 </style>
 
-<svelte:window on:keydown={onKeyDown} />
+<!-- <svelte:window on:keydown={onKeyDown} /> -->
