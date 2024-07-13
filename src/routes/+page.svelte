@@ -1,7 +1,7 @@
 <script lang="ts" type='module'>
 import * as svelte from 'svelte'
 import * as Ace from "ace-builds"
-Ace.config.set('basePath', "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/")
+Ace.config.set('basePath', "src-min-noconflict")
 let editor : Ace.Ace.Editor;
 let goaleditor : Ace.Ace.Editor;
 let score = 0;
