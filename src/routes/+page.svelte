@@ -2,6 +2,8 @@
 import * as svelte from 'svelte'
 import * as Ace from "ace-builds"
 import {challenges, type ChallengeText} from '../challenges'
+import { flip } from 'svelte/animate'
+import { fade, fly } from "svelte/transition"
 Ace.config.set('basePath', "src-min-noconflict")
 let editor : Ace.Ace.Editor;
 let goaleditor : Ace.Ace.Editor;
@@ -16,7 +18,7 @@ function normalizeText(text: string) {
   return text.replace(/\s+/g, ' ').trim();
 }
 
-function compareTextLines() {
+async function compareTextLines() {
   let min = Math.min(editor.session.getDocument().getLength(), goaleditor.session.getDocument().getLength())
   let editorLines = editor.session.getDocument().getLines(0, min)
   let goalLines = goaleditor.session.getDocument().getLines(0, min)
@@ -28,6 +30,7 @@ function compareTextLines() {
   }
   console.log("Matching lines:", ...matchingList)
   matchingList.forEach( (e)=> {
+    setTimeout(() =>{
     editor.session.getDocument().removeFullLines(e, e)
     goaleditor.session.getDocument().removeFullLines(e, e)
     score++
@@ -35,7 +38,8 @@ function compareTextLines() {
     if (scoreBox){
       scoreBox.innerHTML = score.toString()
     }
-  })
+    }, 2000)
+})
 }
 
 function getLines() {
@@ -43,8 +47,16 @@ function getLines() {
 
     const editUM =  editor.session.getUndoManager() 
 
-    editor.session.getDocument().insertFullLines(editor.session.getLength() + 1, challenges[num].startString)
-    goaleditor.session.getDocument().insertFullLines(goaleditor.session.getLength() + 1, challenges[num].endString)
+    let editorLast = editor.session.getLength() + 1
+    let goalLast = goaleditor.session.getLength() + 1
+
+    editor.session.getDocument().insertFullLines(editorLast, challenges[num].startString)
+    goaleditor.session.getDocument().insertFullLines(goalLast, challenges[num].endString)
+
+  setTimeout(() => {
+    console.log(document.querySelector('.ace_line:last-child'))
+ 
+  }, 100);
 
   //@ts-ignore
   editUM.$undoStack.pop()
@@ -56,7 +68,7 @@ svelte.onMount(async () => {
   editor.session.setMode("ace/mode/javascript");
   editor.setKeyboardHandler("ace/keyboard/vim");
   editor.setOptions({
-    fontSize: "14pt"
+    fontSize: "13pt"
   })
 
   goaleditor = Ace.edit("goaleditor")
@@ -64,17 +76,12 @@ svelte.onMount(async () => {
   goaleditor.session.setMode("ace/mode/javascript")
   goaleditor.setReadOnly(true)
   goaleditor.setOptions({
-    fontSize: "14pt"
+    fontSize: "13pt"
   })
-  
+
   editor.on("change", (_) => {
   compareTextLines()
   })
-
-  editor.on("mousewheel", (_) => {
-    console.log('scrolled.')
-    goaleditor.getCursorPosition().row = editor.getCursorPosition().row
-  }) 
 
   scoreBox = document?.getElementById('scorebox')
 
@@ -84,15 +91,15 @@ svelte.onMount(async () => {
 })
 
 
- </script>
+</script>
 <body class ="bg-black dark:bg-gray-900 h-screen">
 
   <title>typeFlow</title>
+
+  <div class="absolute left-2/4 -translate-x-2/4 mx-auto top-2/4 -translate-y-2/4 flex gap-8 px-4 py-12">
   <h2 id="scorebox" class="text-3xl font-semibold tracking-tight text-gray-800 dark:text-white inline-block">
     0
   </h2>
-  <div class="absolute left-2/4 -translate-x-2/4 mx-auto top-2/4 -translate-y-2/4 flex gap-8 px-4 py-12">
-
 
 
     <div class="flex flex-col">
@@ -120,14 +127,22 @@ svelte.onMount(async () => {
 #editor, #goaleditor { 
   position: relative;
   width: 800px;
-  height:300px;
+  height:485px;
+}
+@keyframes example {
+  from {opacity: 0;}
+  to {opacity: 1;}
 }
 #scorebox {
-  position: relative;
-  top: 20px;
-  left: 20px;
+
   margin: 0 auto;
+  margin-top: -80px;
+  margin-right: -80px;
+  animation-name: example;
+  animation-duration: 2s ;
 }
+
+
+
 </style>
 
-<!-- <svelte:window on:keydown={onKeyDown} /> -->
